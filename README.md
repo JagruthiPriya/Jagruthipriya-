@@ -1,132 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+import json
+import os
 
-    <title>Temperature converter</title>
-    <style>
-      @import url("https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Roboto:wght@100;300;400;700&family=Ubuntu:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500;1,700&display=swap");
+TODO_FILE = 'todo_list.json'
 
-      * {
-        box-sizing: border-box;
-        padding: 0;
-        margin: 0;
-        font-family: "Poppins", sans-serif;
-      }
+def load_tasks():
+    if os.path.exists(TODO_FILE):
+        with open(TODO_FILE, 'r') as file:
+            return json.load(file)
+    return []
 
-      .container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        text-align: center;
-        background-color: rgb(99, 99, 209);
-      }
+def save_tasks(tasks):
+    with open(TODO_FILE, 'w') as file:
+        json.dump(tasks, file)
 
-      #calcTemp {
-        padding: 29px 67px;
-        min-height: 290px;
-        background-color: #22926b;
-        box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px,
-          rgba(0, 0, 0, 0.24) 0px 1px 2px;
-      }
+def add_task(tasks, task_description):
+    tasks.append({'description': task_description, 'completed': False})
+    save_tasks(tasks)
+    print(f"Task '{task_description}' added.")
 
-      label {
-        font-size: 38px;
-        font-style: italic;
-        line-height: 80px;
-      }
+def view_tasks(tasks):
+    if not tasks:
+        print("No tasks in the to-do list.")
+        return
 
-      #temp {
-        width: 110px;
-        height: 34px;
-        border-radius: 5px;
-        margin: 12px;
-        padding: 8px;
-        font-size: 20px;
-        font-weight: 500;
-        border: none;
-        outline: none;
-      }
+    for idx, task in enumerate(tasks):
+        status = 'Done' if task['completed'] else 'Pending'
+        print(f"{idx + 1}. {task['description']} - {status}")
 
-      #temp_diff {
-        width: 120px;
-        height: 34px;
-        border-radius: 5px;
-        margin: 12px;
-        font-size: 18px;
-        font-weight: 500;
-        border: none;
-        outline: none;
-      }
+def update_task(tasks, task_index, new_status):
+    if 0 <= task_index < len(tasks):
+        tasks[task_index]['completed'] = new_status
+        save_tasks(tasks)
+        status = 'completed' if new_status else 'pending'
+        print(f"Task {task_index + 1} marked as {status}.")
+    else:
+        print("Invalid task number.")
 
-      #submit {
-        width: 100px;
-        border-radius: 5px;
-        margin: 30px 0 20px 0;
-        font-size: 18px;
-        background-color: rgb(31, 222, 14);
-        padding: 5px;
-        transition: all 0.5s ease;
-      }
+def delete_task(tasks, task_index):
+    if 0 <= task_index < len(tasks):
+        task = tasks.pop(task_index)
+        save_tasks(tasks)
+        print(f"Task '{task['description']}' deleted.")
+    else:
+        print("Invalid task number.")
 
-      #submit:hover {
-        background-color: antiquewhite;
-        cursor: pointer;
-      }
+def main():
+    tasks = load_tasks()
 
-      #result {
-        font-size: 27px;
-      }
-    </style>
-  </head>
+    while True:
+        print("\nTo-Do List Application")
+        print("1. Add Task")
+        print("2. View Tasks")
+        print("3. Update Task Status")
+        print("4. Delete Task")
+        print("5. Exit")
 
-  <body>
-    <div class="container">
-      <form id="calcTemp" onsubmit="calculateTemp(); return false">
-        <label for="temp">Enter the temperature to converter </label>
-        <br />
-        <input type="number" name="temp" id="temp" value="0" />
-        <select name="temp_diff" id="temp_diff">
-          <option value="cel">&#176;Celsius</option>
-          <option value="fah">&#176;Fahrenheit</option>
-        </select>
-        <br />
-        <input type="submit" name="temp" id="submit" />
-        <br />
-        <span id="result"></span>
-      </form>
-    </div>
+        choice = input("Enter your choice: ")
 
-    <script>
-      const calculateTemp = () => {
-        const inputTemp = document.getElementById("temp").value;
+        if choice == '1':
+            task_description = input("Enter task description: ")
+            add_task(tasks, task_description)
+        elif choice == '2':
+            view_tasks(tasks)
+        elif choice == '3':
+            task_index = int(input("Enter task number to update: ")) - 1
+            new_status = input("Enter new status (done/pending): ").strip().lower() == 'done'
+            update_task(tasks, task_index, new_status)
+        elif choice == '4':
+            task_index = int(input("Enter task number to delete: ")) - 1
+            delete_task(tasks, task_index)
+        elif choice == '5':
+            print("Exiting the application. Goodbye!")
+            break
+        else:
+            print("Invalid choice. Please try again.")
 
-        const tempSelected = document.getElementById("temp_diff");
-        const valueTemp = temp_diff.options[tempSelected.selectedIndex].value;
-
-        // Celsius to Fahrenheit
-        const celToFah = (cel) => {
-          let fahrenheit = ((cel * 9) / 5 + 32).toFixed(1);
-          return fahrenheit;
-        };
-
-        // Fahrenheit to Celsius
-        const fahToCel = (fah) => {
-          let celsius = (((fah - 32) * 5) / 9).toFixed(1);
-          return celsius;
-        };
-
-        if (valueTemp == "cel") {
-          document.getElementById("result").innerHTML =
-            celToFah(inputTemp) + "&#176; Fahrenheit";
-        } else {
-          document.getElementById("result").innerHTML =
-            fahToCel(inputTemp) + "&#176; Celsius";
-        }
-      };
-    </script>
-  </body>
-</html>
+if __name__ == "__main__":
+    main()
